@@ -5,4 +5,3 @@
 https://adventofcode.com/2023/
 
 <!--- advent_readme_stars table --->
-<!--- advent_readme_stars table --->
