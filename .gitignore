@@ -120,6 +120,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.envrc
+.direnv/
 .env
 .venv
 env/
@@ -161,5 +163,7 @@ cython_debug/
 
 
 # Hide input files
-test.txt
+example.txt
 input.txt
+test.txt
+advent/resources/*
