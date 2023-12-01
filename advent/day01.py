@@ -3,7 +3,6 @@ import argparse
 import dataclasses
 import logging
 import pathlib
-import re
 
 import aocd
 
