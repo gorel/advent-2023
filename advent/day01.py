@@ -3,6 +3,7 @@ import argparse
 import dataclasses
 import logging
 import pathlib
+import re
 
 import aocd
 
@@ -15,13 +16,79 @@ class Solution:
     part2: str | int | None
 
 
+NUMS = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+
+
 class Solver:
     def __init__(self, data: str) -> None:
         self.logger = logging.getLogger()
         self.data = data
 
+    def solve1(self) -> int:
+        res = 0
+        for line in self.data.splitlines():
+            num1 = None
+            num2 = None
+            for c in line:
+                if num1 is not None:
+                    break
+
+                if c.isdigit():
+                    num1 = c
+                    break
+
+            for c in line[::-1]:
+                if c.isdigit():
+                    num2 = c
+                    break
+
+            if num1 is None or num2 is None:
+                self.logger.warning(f"Could not find two numbers in {line}")
+                continue
+            num = int(num1 + num2)
+            res += num
+        return res
+
+    def solve2(self) -> int:
+        res = 0
+        for line in self.data.splitlines():
+            num1 = None
+            num2 = None
+            for i, c in enumerate(line):
+                if num1 is not None:
+                    break
+
+                if c.isdigit():
+                    num1 = c
+                    break
+
+                for n in NUMS:
+                    if line[i:].startswith(n):
+                        num1 = str(NUMS.index(n) + 1)
+                        break
+
+            for i, c in enumerate(line[::-1]):
+                if num2 is not None:
+                    break
+
+                i = len(line) - i - 1
+                if c.isdigit():
+                    num2 = c
+                    break
+                for n in NUMS:
+                    if line[i:].startswith(n):
+                        num2 = str(NUMS.index(n) + 1)
+                        break
+
+            if num1 is None or num2 is None:
+                self.logger.warning(f"Could not find two numbers in {line}")
+                continue
+            num = int(num1 + num2)
+            res += num
+        return res
+
     def solve(self) -> Solution:
-        return Solution(None, None)
+        return Solution(self.solve1(), self.solve2())
 
 
 if __name__ == "__main__":
@@ -33,8 +100,8 @@ if __name__ == "__main__":
     # Parse input
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--example_path", type=pathlib.Path)
-    parser.add_argument("--part1", help="Part 1 example solution")
-    parser.add_argument("--part2", help="Part 2 example solution")
+    parser.add_argument("--part1", help="Part 1 example solution", type=int)
+    parser.add_argument("--part2", help="Part 2 example solution", type=int)
     args = parser.parse_args()
 
     # Run example
