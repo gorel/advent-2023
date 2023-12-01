@@ -24,6 +24,13 @@ class Solver:
         return Solution(None, None)
 
 
+def submit(solution: Solution, day: int) -> None:
+    if solution.part1 is not None:
+        aocd.post.submit(solution.part1, part="a", day=day, year=2023)
+    if solution.part2 is not None:
+        aocd.post.submit(solution.part2, part="b", day=day, year=2023)
+
+
 if __name__ == "__main__":
     # Set up logging
     logging.basicConfig(level=logging.DEBUG)
@@ -46,9 +53,9 @@ if __name__ == "__main__":
 
         example_solver = Solver(example_input)
         example_solution = example_solver.solve()
-        if args.part1 is not None and example_solution.part1 != args.part1:
+        if args.part1 is not None and str(example_solution.part1) != args.part1:
             logger.fatal(f"Expected {args.part1}, but got {example_solution.part1}")
-        if args.part2 is not None and example_solution.part2 != args.part2:
+        if args.part2 is not None and str(example_solution.part2) != args.part2:
             logger.fatal(f"Expected {args.part2}, but got {example_solution.part2}")
         logger.info("Example solution matches expected")
 
@@ -61,8 +68,9 @@ if __name__ == "__main__":
     logger.info("Running solver")
     solver = Solver(data)
     solution = solver.solve()
-    print(green(f"Solution 1: {solution.part1}"))
-    aocd.post.submit(solution.part1, part="a", day=day, year=2023)
+    logger.info(green(f"Solution 1: {solution.part1}"))
     if solution.part2 is not None:
-        print(green(f"Solution 2: {solution.part2}"))
-        aocd.post.submit(solution.part2, part="b", day=day, year=2023)
+        logger.info(green(f"Solution 2: {solution.part2}"))
+    print(green("-------------------------"))
+
+    submit(solution, day)
