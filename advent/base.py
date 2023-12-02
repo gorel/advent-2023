@@ -37,11 +37,12 @@ class BaseSolver(abc.ABC):
         filepath = pathlib.Path(inspect.getfile(cls))
         return filepath.parent / "resources" / f"{filepath.stem}.txt"
 
-    def submit(self, solution: Solution) -> None:
+    @classmethod
+    def submit(cls, solution: Solution) -> None:
         if solution.part1 is not None:
-            aocd.post.submit(solution.part1, part="a", day=self.day, year=2023)
+            aocd.post.submit(solution.part1, part="a", day=cls.day, year=2023)
         if solution.part2 is not None:
-            aocd.post.submit(solution.part2, part="b", day=self.day, year=2023)
+            aocd.post.submit(solution.part2, part="b", day=cls.day, year=2023)
 
     @classmethod
     def run(cls) -> None:
