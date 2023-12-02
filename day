@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# First ensure day is a number padded with leading zeros
+# If it already has zeros, do nothing
+day=$1
+if [ ${#day} -eq 1 ]; then
+	day="0$day"
+fi
+
+# If the file exists, do nothing
+filename="advent/day${day}.py"
+if [ -f "$filename" ]; then
+	echo "File $filename already exists"
+	exit 0
+fi
+
+# Otherwise, create the file
+cp template.py "$filename"
