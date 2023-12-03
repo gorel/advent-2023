@@ -15,26 +15,23 @@ class Node(pydantic.BaseModel):
 
 class Solver(BaseSolver):
     def solve(self) -> Solution:
-        # First get a list of "points of interest" (symbols)
-        lines = self.data.splitlines()
         points_of_interest = {}
-        for r, line in enumerate(lines):
-            for ratio, s in enumerate(line):
-                if not s.isdigit() and s != ".":
-                    points_of_interest[Point(r, ratio)] = s
-
-        # Now find all the numbers in the input
-        # Wow, all this parsing is pretty tedious...
         nodes = []
-        for r, line in enumerate(lines):
+
+        for r, line in enumerate(self.data.splitlines()):
             in_number = False
             cur = []
             cur_adj = set()
-            for ratio, s in enumerate(line):
+            for c, s in enumerate(line):
+                # First record the point of interest
+                if not s.isdigit() and s != ".":
+                    points_of_interest[Point(r, c)] = s
+
+                # Then handle numbers
                 if s.isdigit():
                     in_number = True
                     cur.append(s)
-                    for point in Point(r, ratio).adjacent8():
+                    for point in Point(r, c).adjacent8():
                         cur_adj.add(point)
                 elif in_number:
                     nodes.append(Node(value=int("".join(cur)), adj=list(cur_adj)))
@@ -46,7 +43,7 @@ class Solver(BaseSolver):
 
         # Now we go through all the nodes (numbers) and if they're adjacent to a
         # point of interest, we add them to the result.
-        # For part2, we checi if the PoI is a gear and if so either store it in our
+        # For part2, we check if the PoI is a gear and if so either store it in our
         # "gears" dict or multiply it by the previously stored node's value.
         # This relies on each gear being adjacent to no more than two nodes.
         res1 = 0

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Iterator
+from typing import Iterator, Tuple
 
 
 @dataclasses.dataclass(frozen=True)
@@ -19,7 +19,9 @@ class Point:
         for d in self.DIRS_8:
             yield self + Point(d[0], d[1])
 
-    def __add__(self, other: Point) -> Point:
+    def __add__(self, other: Point | Tuple[int, int]) -> Point:
+        if isinstance(other, tuple):
+            return Point(self.x + other[0], self.y + other[1])
         return Point(self.x + other.x, self.y + other.y)
 
 
@@ -43,12 +45,3 @@ class Line:
             else:
                 for xx in range(self.end.x, self.start.x + 1):
                     yield Point(xx, self.start.y)
-
-
-class CoordinateGraph:
-    def __init__(self, width: int, height: int) -> None:
-        self.width = width
-        self.height = height
-
-    def in_bounds(self, point: Point) -> bool:
-        return 0 <= point.x < self.width and 0 <= point.y < self.height
