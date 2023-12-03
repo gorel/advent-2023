@@ -13,11 +13,11 @@ class Point:
 
     def adjacent(self) -> Iterator[Point]:
         for d in self.DIRS:
-            yield self + d
+            yield self + Point(d[0], d[1])
 
     def adjacent8(self) -> Iterator[Point]:
         for d in self.DIRS_8:
-            yield self + d
+            yield self + Point(d[0], d[1])
 
     def __add__(self, other: Point) -> Point:
         return Point(self.x + other.x, self.y + other.y)

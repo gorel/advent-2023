@@ -70,8 +70,10 @@ class BaseSolver(abc.ABC):
             example_solution = cls(example_input).solve()
             if args.part1 is not None and str(example_solution.part1) != args.part1:
                 logger.fatal(f"Expected {args.part1}, but got {example_solution.part1}")
+                exit(1)
             if args.part2 is not None and str(example_solution.part2) != args.part2:
                 logger.fatal(f"Expected {args.part2}, but got {example_solution.part2}")
+                exit(1)
             if args.part1 is not None or args.part2 is not None:
                 logger.info("Example solution matches expected")
         else:
