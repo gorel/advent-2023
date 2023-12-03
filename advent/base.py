@@ -90,4 +90,3 @@ class BaseSolver(abc.ABC):
     @abc.abstractmethod
     def solve(self) -> Solution:
         ...
-        return Solution(None, None)
