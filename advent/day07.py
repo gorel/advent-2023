@@ -1,5 +1,6 @@
 # /usr/bin/env python3
 
+import collections
 import enum
 
 import pydantic
@@ -21,112 +22,52 @@ class Hand(pydantic.BaseModel):
     hand: list[str]
     bid: int
 
-    def cardscore(self, card: str) -> int:
-        if card == "T":
-            return 10
-        if card == "J":
-            return 11
-        if card == "Q":
-            return 12
-        if card == "K":
-            return 13
-        if card == "A":
-            return 14
-        return int(card)
+    def cardscore(self, card: str, jokers_wild: bool = False) -> int:
+        scores = {
+            "T": 10,
+            "J": 11 if jokers_wild else 1,
+            "Q": 12,
+            "K": 13,
+            "A": 14,
+        }
+        return scores.get(card) or int(card)
 
-    def score(self) -> list[int]:
-        # Five of a kind
-        if self.hand[0] == self.hand[4]:
-            return [Score.FIVE_OF_A_KIND, self.cardscore(self.hand[0])]
-        # Four of a kind
-        if self.hand[0] == self.hand[3]:
-            return [
-                Score.FOUR_OF_A_KIND,
-                self.cardscore(self.hand[0]),
-                self.cardscore(self.hand[4]),
-            ]
-        if self.hand[1] == self.hand[4]:
-            return [
-                Score.FOUR_OF_A_KIND,
-                self.cardscore(self.hand[1]),
-                self.cardscore(self.hand[0]),
-            ]
-        # Full house
-        if self.hand[0] == self.hand[2] and self.hand[3] == self.hand[4]:
-            return [
-                Score.FULL_HOUSE,
-                self.cardscore(self.hand[0]),
-                self.cardscore(self.hand[3]),
-            ]
-        if self.hand[0] == self.hand[1] and self.hand[2] == self.hand[4]:
-            return [
-                Score.FULL_HOUSE,
-                self.cardscore(self.hand[2]),
-                self.cardscore(self.hand[0]),
-            ]
+    def score(self, jokers_wild: bool = False) -> list[int]:
+        default = [self.cardscore(card, jokers_wild=jokers_wild) for card in self.hand]
+        counter = collections.Counter(self.hand)
 
-        # Three of a kind
-        if self.hand[0] == self.hand[2]:
-            others = sorted(
-                [self.cardscore(self.hand[3]), self.cardscore(self.hand[4])]
-            )
-            return [
-                Score.THREE_OF_A_KIND,
-                self.cardscore(self.hand[0]),
-                *others,
-            ]
-        if self.hand[1] == self.hand[3]:
-            others = sorted(
-                [self.cardscore(self.hand[0]), self.cardscore(self.hand[4])]
-            )
-            return [
-                Score.THREE_OF_A_KIND,
-                self.cardscore(self.hand[1]),
-                *others,
-            ]
+        if jokers_wild:
+            num_jokers = counter["J"]
+            if num_jokers > 0:
+                del counter["J"]
+                # Find the most common thing and give it num_jokers more
+                most_common = counter.most_common(1)
+                if len(most_common) == 0:
+                    # Must be 5 jokers
+                    return [Score.FIVE_OF_A_KIND, *default]
+                counter[most_common[0][0]] += num_jokers
 
-        if self.hand[2] == self.hand[4]:
-            others = sorted(
-                [self.cardscore(self.hand[0]), self.cardscore(self.hand[1])]
-            )
-            return [
-                Score.THREE_OF_A_KIND,
-                self.cardscore(self.hand[2]),
-                *others,
-            ]
+        most_common = counter.most_common(2)
+        if len(most_common) == 1:
+            # Must be 5 of a kind
+            return [Score.FIVE_OF_A_KIND, *default]
 
-        # Two pair
-        for i in range(5):
-            for i_pairer in range(i + 1, 5):
-                for j in range(i_pairer + 1, 5):
-                    for j_pairer in range(j + 1, 5):
-                        if (
-                            self.hand[i] == self.hand[i_pairer]
-                            and self.hand[j] == self.hand[j_pairer]
-                        ):
-                            pair1 = self.cardscore(self.hand[i])
-                            pair2 = self.cardscore(self.hand[j])
-                            if pair1 < pair2:
-                                pair1, pair2 = pair2, pair1
+        max_count = most_common[0][1]
+        second_count = most_common[1][1]
 
-                            last_card_idx = list(
-                                set(range(5)) - set([i, i_pairer, j, j_pairer])
-                            )[0]
-                            last_card_score = self.cardscore(self.hand[last_card_idx])
-                            return [Score.TWO_PAIR, pair1, pair2, last_card_score]
-
-        # One pair
-        for i in range(5):
-            for i_pairer in range(i + 1, 5):
-                if self.hand[i] == self.hand[i_pairer]:
-                    pair = self.cardscore(self.hand[i])
-                    other_cards = set(range(5)) - set([i, i_pairer])
-                    other_scores = [
-                        self.cardscore(self.hand[idx]) for idx in other_cards
-                    ]
-                    return [Score.ONE_PAIR, pair, *other_scores]
-
-        return sorted(self.cardscore(card) for card in self.hand)
+        if max_count == 4:
+            return [Score.FOUR_OF_A_KIND, *default]
+        elif max_count == 3:
+            if second_count == 2:
+                return [Score.FULL_HOUSE, *default]
+            else:
+                return [Score.THREE_OF_A_KIND, *default]
+        elif max_count == 2:
+            if second_count == 2:
+                return [Score.TWO_PAIR, *default]
+            else:
+                return [Score.ONE_PAIR, *default]
+        return [Score.HIGH_CARD, *default]
 
 
 class Solver(BaseSolver):
@@ -134,7 +75,7 @@ class Solver(BaseSolver):
         hands = []
         for line in self.data.splitlines():
             hand, bid = line.split(" ")
-            hands.append(Hand(hand=sorted(hand), bid=int(bid)))
+            hands.append(Hand(hand=list(hand), bid=int(bid)))
 
         hands.sort(key=lambda hand: hand.score())
 
@@ -142,7 +83,12 @@ class Solver(BaseSolver):
         for rank, hand in enumerate(hands, start=1):
             res1 += rank * hand.bid
 
-        return Solution(res1, None)
+        res2 = 0
+        hands.sort(key=lambda hand: hand.score(jokers_wild=True))
+        for rank, hand in enumerate(hands, start=1):
+            res2 += rank * hand.bid
+
+        return Solution(res1, res2)
 
 
 Solver.run()

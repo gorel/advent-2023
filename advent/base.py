@@ -50,6 +50,7 @@ class BaseSolver(abc.ABC):
         parser = argparse.ArgumentParser()
         parser.add_argument("--part1", help="Part 1 example solution")
         parser.add_argument("--part2", help="Part 2 example solution")
+        parser.add_argument("--no-submit", action="store_true", help="Don't submit")
         parser.add_argument(
             "-v", "--verbose", action="store_true", help="Verbose logging"
         )
@@ -87,7 +88,8 @@ class BaseSolver(abc.ABC):
             logger.info(green(f"Solution 2: {solution.part2}"))
         print(green("-------------------------"))
 
-        solver.submit(solution)
+        if not args.no_submit:
+            solver.submit(solution)
 
     @abc.abstractmethod
     def solve(self) -> Solution:
