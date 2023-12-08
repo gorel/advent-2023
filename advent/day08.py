@@ -1,4 +1,5 @@
 # /usr/bin/env python3
+from __future__ import annotations
 
 import math
 
@@ -12,25 +13,29 @@ class Transition(pydantic.BaseModel):
     right: str
 
 
-def get_dist_to_z(
-    transitions: dict[str, Transition], actions: str, cur: str, last_only: bool = False
-) -> int:
-    res = 0
-    while cur != "ZZZ":
-        if last_only and cur[-1] == "Z":
-            break
-        action = actions[res % len(actions)]
-        res += 1
-        if action == "L":
-            cur = transitions[cur].left
-        else:
-            cur = transitions[cur].right
-    return res
+class TransitionTable(pydantic.BaseModel):
+    transitions: dict[str, Transition]
+    actions: str
 
+    @property
+    def a_starts(self) -> list[str]:
+        return [key for key in self.transitions if key[-1] == "A"]
 
-class Solver(BaseSolver):
-    def solve(self) -> Solution:
-        lines = self.data.splitlines()
+    def zdist(self, cur: str, last_only: bool = False) -> int:
+        res = 0
+        while cur != "ZZZ":
+            if last_only and cur[-1] == "Z":
+                break
+            action = self.actions[res % len(self.actions)]
+            res += 1
+            if action == "L":
+                cur = self.transitions[cur].left
+            else:
+                cur = self.transitions[cur].right
+        return res
+
+    @classmethod
+    def from_lines(cls, lines: list[str]) -> TransitionTable:
         actions = lines[0]
         transitions = {}
         for line in lines[2:]:
@@ -39,19 +44,15 @@ class Solver(BaseSolver):
             transitions[key.strip()] = Transition(
                 left=left.strip(), right=right.strip()
             )
+        return TransitionTable(transitions=transitions, actions=actions)
 
-        res1 = get_dist_to_z(transitions, actions, "AAA")
-        cur = {node for node in transitions if node[-1] == "A"}
-        lcms = []
 
-        for start_node in cur:
-            print(f"Starting from {start_node}")
-            entry = get_dist_to_z(transitions, actions, start_node, last_only=True)
-            print(f"Dist for {start_node}: {entry}")
-            lcms.append(entry)
+class Solver(BaseSolver):
+    def solve(self) -> Solution:
+        tbl = TransitionTable.from_lines(self.data.splitlines())
 
-        res2 = math.lcm(*lcms)
-
+        res1 = tbl.zdist("AAA")
+        res2 = math.lcm(*[tbl.zdist(node, last_only=True) for node in tbl.a_starts])
         return Solution(res1, res2)
 
 
