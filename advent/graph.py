@@ -24,6 +24,9 @@ class Point:
             return Point(self.x + other[0], self.y + other[1])
         return Point(self.x + other.x, self.y + other.y)
 
+    def __lt__(self, other: Point) -> bool:
+        return (self.x, self.y) < (other.x, other.y)
+
 
 @dataclasses.dataclass
 class Line:
