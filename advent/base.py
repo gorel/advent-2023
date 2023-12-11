@@ -91,6 +91,10 @@ class BaseSolver(abc.ABC):
         if not args.no_submit:
             solver.submit(solution)
 
+    @property
+    def lines(self) -> list[str]:
+        return self.data.splitlines()
+
     @abc.abstractmethod
     def solve(self) -> Solution:
         ...

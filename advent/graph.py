@@ -19,6 +19,9 @@ class Point:
         for d in self.DIRS_8:
             yield self + Point(d[0], d[1])
 
+    def manhattan(self, other: Point) -> int:
+        return abs(self.x - other.x) + abs(self.y - other.y)
+
     def __add__(self, other: Point | Tuple[int, int]) -> Point:
         if isinstance(other, tuple):
             return Point(self.x + other[0], self.y + other[1])
