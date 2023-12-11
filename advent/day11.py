@@ -1,23 +1,37 @@
 # /usr/bin/env python3
 from __future__ import annotations
 
+import pydantic
+
 from advent.base import BaseSolver, Solution
 from advent.graph import Point
 
 
-def dist(
-    empty_rows: set[int], empty_cols: set[int], p1: Point, p2: Point, factor: int = 2
-) -> int:
-    new_dist = 0
-    low_row = min(p1.row, p2.row)
-    high_row = max(p1.row, p2.row)
-    for i in range(low_row, high_row):
-        new_dist += factor if i in empty_rows else 1
-    low_col = min(p1.col, p2.col)
-    high_col = max(p1.col, p2.col)
-    for i in range(low_col, high_col):
-        new_dist += factor if i in empty_cols else 1
-    return new_dist
+class GalaxyMap(pydantic.BaseModel):
+    galaxies: list[Point]
+    empty_rows: set[int]
+    empty_cols: set[int]
+
+    def dist(self, p1: Point, p2: Point, factor: int = 2) -> int:
+        new_dist = 0
+        low_row = min(p1.row, p2.row)
+        high_row = max(p1.row, p2.row)
+        for i in range(low_row, high_row):
+            new_dist += factor if i in self.empty_rows else 1
+        low_col = min(p1.col, p2.col)
+        high_col = max(p1.col, p2.col)
+        for i in range(low_col, high_col):
+            new_dist += factor if i in self.empty_cols else 1
+        return new_dist
+
+    def pairwise_dists(self, factor: int = 2) -> dict[tuple[Point, Point], int]:
+        res = {}
+        for g1_idx in range(len(self.galaxies) - 1):
+            for g2_idx in range(g1_idx + 1, len(self.galaxies)):
+                p1 = self.galaxies[g1_idx]
+                p2 = self.galaxies[g2_idx]
+                res[(p1, p2)] = self.dist(p1, p2, factor)
+        return res
 
 
 class Solver(BaseSolver):
@@ -36,17 +50,13 @@ class Solver(BaseSolver):
             if all(line[col] == "." for line in self.lines):
                 empty_cols.add(col)
 
+        g = GalaxyMap(galaxies=galaxies, empty_rows=empty_rows, empty_cols=empty_cols)
+
         # Find the shortest path visiting all galaxies
-        pair_dists = []
-        for g1_idx in range(len(galaxies) - 1):
-            for g2_idx in range(g1_idx + 1, len(galaxies)):
-                pair_dists.append(
-                    dist(empty_rows, empty_cols, galaxies[g1_idx], galaxies[g2_idx])
-                )
+        res1 = sum(g.pairwise_dists(factor=2).values())
+        res2 = sum(g.pairwise_dists(factor=1_000_000).values())
 
-        res1 = sum(pair_dists)
-
-        return Solution(res1, None)
+        return Solution(res1, res2)
 
 
 Solver.run()
