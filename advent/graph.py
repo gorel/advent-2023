@@ -27,8 +27,11 @@ class Point:
         for d in self.DIRS_8:
             yield self + Point(d[0], d[1])
 
-    def manhattan(self, other: Point) -> int:
+    def manhattan_dist(self, other: Point) -> int:
         return abs(self.x - other.x) + abs(self.y - other.y)
+
+    def euclidean_dist(self, other: Point) -> float:
+        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
     def __add__(self, other: Point | Tuple[int, int]) -> Point:
         if isinstance(other, tuple):

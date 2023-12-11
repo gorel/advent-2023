@@ -52,10 +52,8 @@ class Solver(BaseSolver):
 
         g = GalaxyMap(galaxies=galaxies, empty_rows=empty_rows, empty_cols=empty_cols)
 
-        # Find the shortest path visiting all galaxies
         res1 = sum(g.pairwise_dists(factor=2).values())
         res2 = sum(g.pairwise_dists(factor=1_000_000).values())
-
         return Solution(res1, res2)
 
 
