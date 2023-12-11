@@ -11,6 +11,14 @@ class Point:
     x: int
     y: int
 
+    @property
+    def row(self) -> int:
+        return self.x
+
+    @property
+    def col(self) -> int:
+        return self.y
+
     def adjacent(self) -> Iterator[Point]:
         for d in self.DIRS:
             yield self + Point(d[0], d[1])
