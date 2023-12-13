@@ -21,9 +21,11 @@ class Solution:
 
 
 class BaseSolver(abc.ABC):
-    def __init__(self, data: str) -> None:
+    def __init__(self, data: str, is_example: bool = False) -> None:
         self.logger = logging.getLogger()
         self.data = data
+        self.is_example = is_example
+        self.is_real = not is_example
 
     @classmethod
     @property
@@ -68,7 +70,7 @@ class BaseSolver(abc.ABC):
                 example_input = f.read()
             logger.debug("Read example input")
 
-            example_solution = cls(example_input).solve()
+            example_solution = cls(example_input, is_example=True).solve()
             if args.part1 is not None and str(example_solution.part1) != args.part1:
                 logger.fatal(f"Expected {args.part1}, but got {example_solution.part1}")
                 exit(1)
