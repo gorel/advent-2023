@@ -51,4 +51,33 @@ class Solver(BaseSolver):
         return Solution(res1, res2)
 
 
+"""
+Here be dragons. I was seeing how crazy I could make it by doing silly things like inlining the hash function.
+class GolfedSolver(BaseSolver):
+    def solve(self) -> Solution:
+        B = [""] * 256
+        m = {}
+        for c in self.data.strip().split(","):
+            if "=" in c:
+                m[c.split("=")[0]] = int(c.split("=")[1])
+                if f"{c.split('=')[0]}," not in B[(lambda s: (lambda r, s: [r := (r + ord(c)) * 17 % 256 for c in s][-1])(0, s))(c.split("=")[0])]:
+                    B[(lambda s: (lambda r, s: [r := (r + ord(c)) * 17 % 256 for c in s][-1])(0, s))(c.split("=")[0])] += f"{c.split('=')[0]},"
+            else:
+                if f"{c.split('-')[0]}," in B[(lambda s: (lambda r, s: [r := (r + ord(c)) * 17 % 256 for c in s][-1])(0, s))(c.split("-")[0])]:
+                    B[(lambda s: (lambda r, s: [r := (r + ord(c)) * 17 % 256 for c in s][-1])(0, s))(c.split("-")[0])] = B[(lambda s: (lambda r, s: [r := (r + ord(c)) * 17 % 256 for c in s][-1])(0, s))(c.split("-")[0])].replace(
+                        f"{c.split('-')[0]},", ""
+                    )
+                    del m[c.split("-")[0]]
+
+        return Solution(
+            sum((lambda s: (lambda r, s: [r := (r + ord(c)) * 17 % 256 for c in s][-1])(0, s))(c) for c in self.data.strip().split(",")),
+            sum(
+                i * j * m.get(l, 0)
+                for i, box in enumerate(B, start=1)
+                for j, l in enumerate(box[:-1].split(","), start=1)
+            ),
+        )
+"""  # noqa
+
+
 Solver.run()
