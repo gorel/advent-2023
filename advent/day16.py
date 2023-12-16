@@ -2,6 +2,7 @@
 
 import collections
 
+import joblib
 import pydantic
 import tqdm
 
@@ -39,29 +40,17 @@ class Grid(pydantic.BaseModel):
         deflector = self.g[cur_point.row][cur_point.col]
         dirs = []
         match deflector, cur_dir:
-            case "/", Direction.LEFT:
-                dirs = [Direction.DOWN]
-            case "/", Direction.RIGHT:
-                dirs = [Direction.UP]
-            case "/", Direction.UP:
-                dirs = [Direction.RIGHT]
-            case "/", Direction.DOWN:
-                dirs = [Direction.LEFT]
-            case "\\", Direction.LEFT:
-                dirs = [Direction.UP]
-            case "\\", Direction.RIGHT:
-                dirs = [Direction.DOWN]
-            case "\\", Direction.UP:
-                dirs = [Direction.LEFT]
-            case "\\", Direction.DOWN:
-                dirs = [Direction.RIGHT]
-            case "|", Direction.LEFT:
+            case "/", Direction.LEFT | Direction.RIGHT:
+                dirs = [cur_dir.counter_clockwise]
+            case "/", Direction.UP | Direction.DOWN:
+                dirs = [cur_dir.clockwise]
+            case "\\", Direction.LEFT | Direction.RIGHT:
+                dirs = [cur_dir.clockwise]
+            case "\\", Direction.UP | Direction.DOWN:
+                dirs = [cur_dir.counter_clockwise]
+            case "|", Direction.LEFT | Direction.RIGHT:
                 dirs = [Direction.UP, Direction.DOWN]
-            case "|", Direction.RIGHT:
-                dirs = [Direction.UP, Direction.DOWN]
-            case "-", Direction.UP:
-                dirs = [Direction.LEFT, Direction.RIGHT]
-            case "-", Direction.DOWN:
+            case "-", Direction.UP | Direction.DOWN:
                 dirs = [Direction.LEFT, Direction.RIGHT]
             case _:
                 dirs = [cur_dir]
@@ -87,10 +76,11 @@ class Solver(BaseSolver):
         grid = Grid(g=self.lines)
         res1 = len(grid.calculate_energized())
 
-        res2 = 0
-        for starting_transition in tqdm.tqdm(grid.starting_transitions()):
-            energized = grid.calculate_energized(starting_transition)
-            res2 = max(res2, len(energized))
+        results: list[set[Point]] = joblib.Parallel(n_jobs=-1)(
+            joblib.delayed(grid.calculate_energized)(pos)
+            for pos in tqdm.tqdm(grid.starting_transitions())
+        )
+        res2 = max(len(r) for r in results)
 
         return Solution(res1, res2)
 
