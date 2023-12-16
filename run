@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# First ensure day is a number padded with leading zeros
+# If it already has zeros, do nothing
+day=$1
+if [ ${#day} -eq 1 ]; then
+	day="0$day"
+fi
+
+# Create an array to hold the args
+args=()
+# If we have a second argument, append it to args
+if [ $# -ge 2 ]; then
+  args+=("--part1=$2")
+fi
+# If we have a third argument, append it to args
+if [ $# -ge 3 ]; then
+  args+=("--part2=$3")
+fi
+# And append any extra args directly
+args+=("${@:4}")
+
+# Run the program
+python3 -m "advent.day$day" "${args[@]}"

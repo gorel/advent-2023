@@ -26,7 +26,7 @@ class Node(pydantic.BaseModel):
         }
         if self.val == ".":
             return []
-        return [Point(self.p.x + x, self.p.y + y) for x, y in m[self.val]]
+        return [Point(self.p.row + x, self.p.col + y) for x, y in m[self.val]]
 
 
 class Graph(pydantic.BaseModel):
@@ -44,28 +44,28 @@ class Graph(pydantic.BaseModel):
         # First discover what kind of point S is
         possible = set()
         # Check up
-        up = Point(self.start.x - 1, self.start.y)
+        up = Point(self.start.row - 1, self.start.col)
         if self.start in self.neighbors(up):
             if len(possible) > 0:
                 possible &= {"|", "7", "F"}
             else:
                 possible = {"|", "7", "F"}
         # Check left
-        left = Point(self.start.x, self.start.y - 1)
+        left = Point(self.start.row, self.start.col - 1)
         if self.start in self.neighbors(left):
             if len(possible) > 0:
                 possible &= {"-", "J", "7"}
             else:
                 possible = {"-", "J", "7"}
         # Check right
-        right = Point(self.start.x, self.start.y + 1)
+        right = Point(self.start.row, self.start.col + 1)
         if self.start in self.neighbors(right):
             if len(possible) > 0:
                 possible &= {"-", "L", "F"}
             else:
                 possible = {"-", "L", "F"}
         # Check down
-        down = Point(self.start.x + 1, self.start.y)
+        down = Point(self.start.row + 1, self.start.col)
         if self.start in self.neighbors(down):
             if len(possible) > 0:
                 possible &= {"|", "7", "F"}
@@ -94,7 +94,7 @@ class Graph(pydantic.BaseModel):
     def _ENHANCE(self) -> Graph:
         # Double the resolution of the graph so we can see "between" pipes
         nodes = {}
-        start = Point(x=-1, y=-1)
+        start = Point(row=-1, col=-1)
         for row in range(self.rows):
             for col in range(self.cols):
                 topleft = Point(row * 2, col * 2)
@@ -216,13 +216,13 @@ class Graph(pydantic.BaseModel):
 class Solver(BaseSolver):
     def solve(self) -> Solution:
         nodes = {}
-        start = Point(x=-1, y=-1)
+        start = Point(row=-1, col=-1)
         lines = self.data.splitlines()
         rows = len(lines)
         cols = len(lines[0]) if rows > 0 else 0
         for row, line in enumerate(lines):
             for col, c in enumerate(line):
-                p = Point(x=row, y=col)
+                p = Point(row=row, col=col)
                 node = Node(p=p, val=c)
                 nodes[p] = node
                 if c == "S":
