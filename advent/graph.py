@@ -11,6 +11,23 @@ class Direction(enum.Enum):
     UP = enum.auto()
     DOWN = enum.auto()
 
+    @property
+    def clockwise(self) -> Direction:
+        match self:
+            case Direction.LEFT:
+                return Direction.UP
+            case Direction.RIGHT:
+                return Direction.DOWN
+            case Direction.UP:
+                return Direction.RIGHT
+            case Direction.DOWN:
+                return Direction.LEFT
+
+    @property
+    def counter_clockwise(self) -> Direction:
+        # Two wrongs don't make a right, but three lefts do.
+        return self.clockwise.clockwise.clockwise
+
 
 @dataclasses.dataclass(frozen=True)
 class Point:

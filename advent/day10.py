@@ -175,7 +175,7 @@ class Graph(pydantic.BaseModel):
         # Everything else is a "false" node.
         res = 0
         for p in internal:
-            if p.x % 2 == 0 and p.y % 2 == 0:
+            if p.row % 2 == 0 and p.col % 2 == 0:
                 res += 1
         return res
 
