@@ -6,6 +6,7 @@ import dataclasses
 import inspect
 import logging
 import pathlib
+import time
 
 import aocd
 
@@ -70,7 +71,9 @@ class BaseSolver(abc.ABC):
                 example_input = f.read()
             logger.debug("Read example input")
 
+            start = time.time()
             example_solution = cls(example_input, is_example=True).solve()
+            elapsed = time.time() - start
             if args.part1 is not None and str(example_solution.part1) != args.part1:
                 logger.fatal(f"Expected {args.part1}, but got {example_solution.part1}")
                 exit(1)
@@ -78,16 +81,19 @@ class BaseSolver(abc.ABC):
                 logger.fatal(f"Expected {args.part2}, but got {example_solution.part2}")
                 exit(1)
             if args.part1 is not None or args.part2 is not None:
-                logger.info("Example solution matches expected")
+                logger.info(f"Example solution matches expected (took {elapsed:.2f}s)")
         else:
             logger.warning("No example input found")
 
         data = aocd.get_data(day=cls.day, year=2023)
         solver = cls(data)
+        start = time.time()
         solution = solver.solve()
+        elapsed = time.time() - start
         logger.info(green(f"Solution 1: {solution.part1}"))
         if solution.part2 is not None:
             logger.info(green(f"Solution 2: {solution.part2}"))
+        logger.info(green(f"Took {elapsed:.2f}s"))
         print(green("-------------------------"))
 
         if not args.no_submit:

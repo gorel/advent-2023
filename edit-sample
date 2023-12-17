@@ -8,4 +8,5 @@ if [ ${#day} -eq 1 ]; then
 fi
 
 filename="advent/resources/day${day}.txt"
+touch "$filename"
 nvim --clean "$filename" && head -n 5 "$filename" && echo && aocd | tail -n 5

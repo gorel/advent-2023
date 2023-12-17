@@ -6,10 +6,10 @@ from typing import Iterator, Tuple
 
 
 class Direction(enum.Enum):
-    LEFT = enum.auto()
-    RIGHT = enum.auto()
-    UP = enum.auto()
-    DOWN = enum.auto()
+    LEFT = (0, -1)
+    RIGHT = (0, 1)
+    UP = (-1, 0)
+    DOWN = (1, 0)
 
     def ascii(self) -> str:
         match self:
@@ -39,10 +39,20 @@ class Direction(enum.Enum):
         # Two wrongs don't make a right, but three lefts do.
         return self.clockwise.clockwise.clockwise
 
+    def turn_left(self) -> Direction:
+        return self.counter_clockwise
+
+    def turn_right(self) -> Direction:
+        return self.clockwise
+
+    @property
+    def opposite(self) -> Direction:
+        return self.clockwise.clockwise
+
 
 @dataclasses.dataclass(frozen=True)
 class Point:
-    DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    DIRS = [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN]
     DIRS_8 = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
     row: int
     col: int
@@ -60,7 +70,11 @@ class Point:
 
     def adjacent(self) -> Iterator[Point]:
         for d in self.DIRS:
-            yield self + Point(d[0], d[1])
+            yield self + Point(d.value[0], d.value[1])
+
+    def adjacent_with_dirs(self) -> Iterator[tuple[Point, Direction]]:
+        for d in self.DIRS:
+            yield (self + Point(d.value[0], d.value[1]), d)
 
     def adjacent8(self) -> Iterator[Point]:
         for d in self.DIRS_8:

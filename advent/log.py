@@ -2,8 +2,16 @@ import logging
 import sys
 
 
+def gray(s: str) -> str:
+    return f"\033[90m{s}\033[0m"
+
+
 def green(s: str) -> str:
     return f"\033[92m\033[1m{s}\033[0m"
+
+
+def yellow(s: str) -> str:
+    return f"\033[93m\033[1m{s}\033[0m"
 
 
 # Very slightly adapted from https://stackoverflow.com/a/56944256/15625637
