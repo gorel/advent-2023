@@ -14,13 +14,13 @@ class Direction(enum.Enum):
     def ascii(self) -> str:
         match self:
             case Direction.LEFT:
-                return "<"
+                return "←"
             case Direction.RIGHT:
-                return ">"
+                return "→"
             case Direction.UP:
-                return "^"
+                return "↑"
             case Direction.DOWN:
-                return "v"
+                return "↓"
 
     @property
     def clockwise(self) -> Direction:
