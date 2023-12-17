@@ -137,7 +137,7 @@ class Solver(BaseSolver):
         res1 = sum(
             joblib.Parallel(n_jobs=-1)(
                 joblib.delayed(problem.solutions)() for problem in tqdm.tqdm(problems)
-            )
+            )  # type: ignore
         )
 
         res2 = sum(
@@ -149,7 +149,7 @@ class Solver(BaseSolver):
                     ).solutions
                 )()
                 for problem in tqdm.tqdm(problems)
-            )
+            )  # type: ignore
         )
 
         return Solution(res1, res2)

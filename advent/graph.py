@@ -11,6 +11,17 @@ class Direction(enum.Enum):
     UP = enum.auto()
     DOWN = enum.auto()
 
+    def ascii(self) -> str:
+        match self:
+            case Direction.LEFT:
+                return "<"
+            case Direction.RIGHT:
+                return ">"
+            case Direction.UP:
+                return "^"
+            case Direction.DOWN:
+                return "v"
+
     @property
     def clockwise(self) -> Direction:
         match self:

@@ -79,7 +79,7 @@ class Solver(BaseSolver):
         results: list[set[Point]] = joblib.Parallel(n_jobs=-1)(
             joblib.delayed(grid.calculate_energized)(pos)
             for pos in tqdm.tqdm(grid.starting_transitions())
-        )
+        )  # type: ignore
         res2 = max(len(r) for r in results)
 
         return Solution(res1, res2)
