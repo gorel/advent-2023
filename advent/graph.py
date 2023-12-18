@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-from typing import Iterator, Tuple
+from typing import Generic, Iterator, Tuple, TypeVar
+
+T = TypeVar("T")
 
 
 class Direction(enum.Enum):
@@ -10,6 +12,23 @@ class Direction(enum.Enum):
     RIGHT = (0, 1)
     UP = (-1, 0)
     DOWN = (1, 0)
+    UPLEFT = (-1, -1)
+    UPRIGHT = (-1, 1)
+    DOWNLEFT = (1, -1)
+    DOWNRIGHT = (1, 1)
+
+    @classmethod
+    def cardinal(cls) -> list[Direction]:
+        return [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN]
+
+    @classmethod
+    def diagonal(cls) -> list[Direction]:
+        return [
+            Direction.UPLEFT,
+            Direction.UPRIGHT,
+            Direction.DOWNLEFT,
+            Direction.DOWNRIGHT,
+        ]
 
     def ascii(self) -> str:
         match self:
@@ -21,23 +40,63 @@ class Direction(enum.Enum):
                 return "↑"
             case Direction.DOWN:
                 return "↓"
+            case Direction.UPLEFT:
+                return "↖"
+            case Direction.UPRIGHT:
+                return "↗"
+            case Direction.DOWNLEFT:
+                return "↙"
+            case Direction.DOWNRIGHT:
+                return "↘"
 
     @property
     def clockwise(self) -> Direction:
+        return self.clockwise45.clockwise45
+
+    @property
+    def clockwise45(self) -> Direction:
         match self:
             case Direction.LEFT:
-                return Direction.UP
+                return Direction.UPLEFT
             case Direction.RIGHT:
-                return Direction.DOWN
+                return Direction.DOWNRIGHT
             case Direction.UP:
-                return Direction.RIGHT
+                return Direction.UPRIGHT
             case Direction.DOWN:
+                return Direction.DOWNLEFT
+            case Direction.UPLEFT:
+                return Direction.UP
+            case Direction.UPRIGHT:
+                return Direction.RIGHT
+            case Direction.DOWNLEFT:
                 return Direction.LEFT
+            case Direction.DOWNRIGHT:
+                return Direction.DOWN
 
     @property
     def counter_clockwise(self) -> Direction:
         # Two wrongs don't make a right, but three lefts do.
         return self.clockwise.clockwise.clockwise
+
+    @property
+    def counter_clockwise45(self) -> Direction:
+        match self:
+            case Direction.LEFT:
+                return Direction.DOWNLEFT
+            case Direction.RIGHT:
+                return Direction.UPRIGHT
+            case Direction.UP:
+                return Direction.UPLEFT
+            case Direction.DOWN:
+                return Direction.DOWNRIGHT
+            case Direction.UPLEFT:
+                return Direction.LEFT
+            case Direction.UPRIGHT:
+                return Direction.UP
+            case Direction.DOWNLEFT:
+                return Direction.DOWN
+            case Direction.DOWNRIGHT:
+                return Direction.RIGHT
 
     def turn_left(self) -> Direction:
         return self.counter_clockwise
@@ -45,40 +104,62 @@ class Direction(enum.Enum):
     def turn_right(self) -> Direction:
         return self.clockwise
 
+    def turn_left45(self) -> Direction:
+        return self.counter_clockwise45
+
+    def turn_right45(self) -> Direction:
+        return self.clockwise45
+
     @property
     def opposite(self) -> Direction:
         return self.clockwise.clockwise
 
+    @classmethod
+    def from_short(cls, s: str) -> Direction:
+        match s:
+            case "L":
+                return Direction.LEFT
+            case "R":
+                return Direction.RIGHT
+            case "U":
+                return Direction.UP
+            case "D":
+                return Direction.DOWN
+            case "UL":
+                return Direction.UPLEFT
+            case "UR":
+                return Direction.UPRIGHT
+            case "DL":
+                return Direction.DOWNLEFT
+            case "DR":
+                return Direction.DOWNRIGHT
+            case _:
+                raise ValueError(f"Invalid direction: {s}")
+
 
 @dataclasses.dataclass(frozen=True)
 class Point:
-    DIRS = [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN]
-    DIRS_8 = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
     row: int
     col: int
 
     def move(self, direction: Direction) -> Point:
-        match direction:
-            case Direction.LEFT:
-                return Point(self.row, self.col - 1)
-            case Direction.RIGHT:
-                return Point(self.row, self.col + 1)
-            case Direction.UP:
-                return Point(self.row - 1, self.col)
-            case Direction.DOWN:
-                return Point(self.row + 1, self.col)
+        return self + direction
 
     def adjacent(self) -> Iterator[Point]:
-        for d in self.DIRS:
-            yield self + Point(d.value[0], d.value[1])
+        for p, _ in self.adjacent_with_dirs():
+            yield p
 
     def adjacent_with_dirs(self) -> Iterator[tuple[Point, Direction]]:
-        for d in self.DIRS:
-            yield (self + Point(d.value[0], d.value[1]), d)
+        for d in Direction.cardinal():
+            yield (self + d, d)
 
     def adjacent8(self) -> Iterator[Point]:
-        for d in self.DIRS_8:
-            yield self + Point(d[0], d[1])
+        for p, _ in self.adjacent8_with_dirs():
+            yield p
+
+    def adjacent8_with_dirs(self) -> Iterator[tuple[Point, Direction]]:
+        for d in Direction:
+            yield (self + d, d)
 
     def manhattan_dist(self, other: Point) -> int:
         return abs(self.row - other.row) + abs(self.col - other.col)
@@ -86,9 +167,11 @@ class Point:
     def euclidean_dist(self, other: Point) -> float:
         return ((self.row - other.row) ** 2 + (self.col - other.col) ** 2) ** 0.5
 
-    def __add__(self, other: Point | Tuple[int, int]) -> Point:
+    def __add__(self, other: Point | Direction | Tuple[int, int]) -> Point:
         if isinstance(other, tuple):
             return Point(self.row + other[0], self.col + other[1])
+        elif isinstance(other, Direction):
+            return Point(self.row + other.value[0], self.col + other.value[1])
         return Point(self.row + other.row, self.col + other.col)
 
     def __lt__(self, other: Point) -> bool:
@@ -115,3 +198,31 @@ class Line:
             else:
                 for xx in range(self.end.row, self.start.row + 1):
                     yield Point(xx, self.start.col)
+
+
+@dataclasses.dataclass
+class Grid(Generic[T]):
+    g: list[list[T]]
+
+    @property
+    def rows(self) -> int:
+        return len(self.g)
+
+    @property
+    def cols(self) -> int:
+        return len(self.g[0])
+
+    @property
+    def T(self) -> Grid[T]:
+        return Grid([list(x) for x in zip(*self.g)])
+
+    def inbounds(self, p: Point) -> bool:
+        return 0 <= p.row < len(self.g) and 0 <= p.col < len(self.g[0])
+
+    def at(self, p: Point) -> T:
+        return self.g[p.row][p.col]
+
+    def __iter__(self) -> Iterator[tuple[Point, T]]:
+        for row in range(self.rows):
+            for col in range(self.cols):
+                yield (Point(row, col), self.g[row][col])
