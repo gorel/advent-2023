@@ -18,6 +18,7 @@ class Direction(enum.Enum):
     DOWNRIGHT = (1, 1)
 
     @classmethod
+    @property
     def cardinal(cls) -> list[Direction]:
         return [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN]
 
@@ -29,6 +30,12 @@ class Direction(enum.Enum):
             Direction.DOWNLEFT,
             Direction.DOWNRIGHT,
         ]
+
+    def __mul__(self, n: int) -> Point:
+        return Point(self.value[0] * n, self.value[1] * n)
+
+    def __rmul__(self, n: int) -> Point:
+        return self * n
 
     def ascii(self) -> str:
         match self:
@@ -116,22 +123,22 @@ class Direction(enum.Enum):
 
     @classmethod
     def from_short(cls, s: str) -> Direction:
-        match s:
-            case "L":
+        match s.upper():
+            case "L" | "W":
                 return Direction.LEFT
-            case "R":
+            case "R" | "E":
                 return Direction.RIGHT
-            case "U":
+            case "U" | "N":
                 return Direction.UP
-            case "D":
+            case "D" | "S":
                 return Direction.DOWN
-            case "UL":
+            case "UL" | "NW":
                 return Direction.UPLEFT
-            case "UR":
+            case "UR" | "NE":
                 return Direction.UPRIGHT
-            case "DL":
+            case "DL" | "SW":
                 return Direction.DOWNLEFT
-            case "DR":
+            case "DR" | "SE":
                 return Direction.DOWNRIGHT
             case _:
                 raise ValueError(f"Invalid direction: {s}")
@@ -150,7 +157,7 @@ class Point:
             yield p
 
     def adjacent_with_dirs(self) -> Iterator[tuple[Point, Direction]]:
-        for d in Direction.cardinal():
+        for d in Direction.cardinal:
             yield (self + d, d)
 
     def adjacent8(self) -> Iterator[Point]:

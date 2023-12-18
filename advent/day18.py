@@ -10,14 +10,14 @@ from advent.graph import Direction, Point
 
 class Action(pydantic.BaseModel):
     direction: Direction
-    num: int
+    dist: int
     code: str
 
-    def invert(self) -> Action:
+    def fix_elf_reading_comprehension(self) -> Action:
         m = {0: Direction.RIGHT, 1: Direction.DOWN, 2: Direction.LEFT, 3: Direction.UP}
-        num = int(self.code[:5], 16)
+        dist = int(self.code[:5], 16)
         direction = m[int(self.code[-1], 16)]
-        return Action(direction=direction, num=num, code=self.code)
+        return Action(direction=direction, dist=dist, code=self.code)
 
 
 class Grid:
@@ -26,13 +26,8 @@ class Grid:
         self.perimeter = 0
         for action in actions:
             self.vertices.append(origin)
-            self.perimeter += action.num
-            origin += {
-                Direction.LEFT: (-action.num, 0),
-                Direction.RIGHT: (action.num, 0),
-                Direction.UP: (0, -action.num),
-                Direction.DOWN: (0, action.num),
-            }[action.direction]
+            self.perimeter += action.dist
+            origin += action.direction * action.dist
 
     def area(self) -> int:
         x = np.array([p.col for p in self.vertices])
@@ -63,12 +58,12 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         actions = []
         for line in self.lines:
-            direction, num, code = line.split()
-            direction = Direction.from_short(direction.upper())
-            actions.append(Action(direction=direction, num=int(num), code=code[2:-1]))
+            d, dist, code = line.split()
+            d = Direction.from_short(d)
+            actions.append(Action(direction=d, dist=int(dist), code=code[2:-1]))
 
         res1 = Grid(actions).area()
-        res2 = Grid([a.invert() for a in actions]).area()
+        res2 = Grid([a.fix_elf_reading_comprehension() for a in actions]).area()
         return Solution(res1, res2)
 
 
