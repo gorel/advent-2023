@@ -59,7 +59,7 @@ class Solver(BaseSolver):
         actions = []
         for line in self.lines:
             d, dist, code = line.split()
-            d = Direction.from_short(d)
+            d = Direction.from_str(d)
             actions.append(Action(direction=d, dist=int(dist), code=code[2:-1]))
 
         res1 = Grid(actions).area()

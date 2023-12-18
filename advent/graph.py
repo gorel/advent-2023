@@ -122,23 +122,23 @@ class Direction(enum.Enum):
         return self.clockwise.clockwise
 
     @classmethod
-    def from_short(cls, s: str) -> Direction:
+    def from_str(cls, s: str) -> Direction:
         match s.upper():
-            case "L" | "W":
+            case "L" | "W" | "LEFT" | "WEST":
                 return Direction.LEFT
-            case "R" | "E":
+            case "R" | "E" | "RIGHT" | "EAST":
                 return Direction.RIGHT
-            case "U" | "N":
+            case "U" | "N" | "UP" | "NORTH":
                 return Direction.UP
-            case "D" | "S":
+            case "D" | "S" | "DOWN" | "SOUTH":
                 return Direction.DOWN
-            case "UL" | "NW":
+            case "UL" | "NW" | "UPLEFT" | "NORTHWEST":
                 return Direction.UPLEFT
-            case "UR" | "NE":
+            case "UR" | "NE" | "UPRIGHT" | "NORTHEAST":
                 return Direction.UPRIGHT
-            case "DL" | "SW":
+            case "DL" | "SW" | "DOWNLEFT" | "SOUTHWEST":
                 return Direction.DOWNLEFT
-            case "DR" | "SE":
+            case "DR" | "SE" | "DOWNRIGHT" | "SOUTHEAST":
                 return Direction.DOWNRIGHT
             case _:
                 raise ValueError(f"Invalid direction: {s}")
