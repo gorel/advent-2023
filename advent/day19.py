@@ -8,6 +8,42 @@ import pydantic
 from advent.base import BaseSolver, Solution
 
 
+class RatingRange(pydantic.BaseModel):
+    x: tuple[int, int]
+    m: tuple[int, int]
+    a: tuple[int, int]
+    s: tuple[int, int]
+
+    def part1_score(self) -> int:
+        return self.x[0] + self.m[0] + self.a[0] + self.s[0]
+
+    def part2_score(self) -> int:
+        x = int(self.x[1] - self.x[0])
+        m = int(self.m[1] - self.m[0])
+        a = int(self.a[1] - self.a[0])
+        s = int(self.s[1] - self.s[0])
+        return x * m * a * s
+
+    def for_key(self, key: str) -> tuple[int, int]:
+        return getattr(self, key)
+
+    def with_updated_key(self, key: str, value: tuple[int, int]) -> RatingRange:
+        return RatingRange(**{**self.dict(), key: value})
+
+    @classmethod
+    def from_str(cls, s: str) -> RatingRange:
+        # {x=787,m=2655,a=1222,s=2876}
+        match = re.match(r"{x=(\d+),m=(\d+),a=(\d+),s=(\d+)}", s)
+        assert match is not None
+        x, m, a, s = match.groups()
+        return cls(
+            x=(int(x), int(x) + 1),
+            m=(int(m), int(m) + 1),
+            a=(int(a), int(a) + 1),
+            s=(int(s), int(s) + 1),
+        )
+
+
 class Rule(pydantic.BaseModel):
     next_state: str
     cond_key: str | None
@@ -70,42 +106,6 @@ class Workflow(pydantic.BaseModel):
         name, rules_str = match.groups()
         rules = [Rule.from_str(r) for r in rules_str.split(",")]
         return cls(name=name, rules=rules)
-
-
-class RatingRange(pydantic.BaseModel):
-    x: tuple[int, int]
-    m: tuple[int, int]
-    a: tuple[int, int]
-    s: tuple[int, int]
-
-    def part1_score(self) -> int:
-        return self.x[0] + self.m[0] + self.a[0] + self.s[0]
-
-    def part2_score(self) -> int:
-        x = int(self.x[1] - self.x[0])
-        m = int(self.m[1] - self.m[0])
-        a = int(self.a[1] - self.a[0])
-        s = int(self.s[1] - self.s[0])
-        return x * m * a * s
-
-    def for_key(self, key: str) -> tuple[int, int]:
-        return getattr(self, key)
-
-    def with_updated_key(self, key: str, value: tuple[int, int]) -> RatingRange:
-        return RatingRange(**{**self.dict(), key: value})
-
-    @classmethod
-    def from_str(cls, s: str) -> RatingRange:
-        # {x=787,m=2655,a=1222,s=2876}
-        match = re.match(r"{x=(\d+),m=(\d+),a=(\d+),s=(\d+)}", s)
-        assert match is not None
-        x, m, a, s = match.groups()
-        return cls(
-            x=(int(x), int(x) + 1),
-            m=(int(m), int(m) + 1),
-            a=(int(a), int(a) + 1),
-            s=(int(s), int(s) + 1),
-        )
 
 
 class Solver(BaseSolver):
