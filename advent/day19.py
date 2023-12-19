@@ -20,7 +20,6 @@ class Rule(pydantic.BaseModel):
         if ":" not in s:
             return cls(next_state=s, cond_key=None, interval=interval)
         condition, next_state = s.split(":")
-        # Split on < or >
         if "<" in condition:
             cond_key, interval = condition.split("<")
             interval = (-float("inf"), int(interval))
@@ -45,7 +44,7 @@ class Workflow(pydantic.BaseModel):
                 lo, hi = r.for_key(rule.cond_key)
                 intersection_start = int(max(lo, rule.interval[0]))
                 intersection_end = int(min(hi, rule.interval[1]))
-                if intersection_start <= intersection_end:
+                if intersection_start < intersection_end:
                     res.append(
                         (
                             rule.next_state,
@@ -67,30 +66,10 @@ class Workflow(pydantic.BaseModel):
     def from_str(cls, s: str) -> Workflow:
         # px{a<2006:qkq,m>2090:A,rfg}
         match = re.match(r"(\w+){(.+)}", s)
-        if not match:
-            raise ValueError(f"Failed to parse workflow: {s}")
+        assert match is not None
         name, rules_str = match.groups()
         rules = [Rule.from_str(r) for r in rules_str.split(",")]
         return cls(name=name, rules=rules)
-
-
-class Rating(pydantic.BaseModel):
-    x: int
-    m: int
-    a: int
-    s: int
-
-    def total(self) -> int:
-        return self.x + self.m + self.a + self.s
-
-    @classmethod
-    def from_str(cls, s: str) -> Rating:
-        # {x=787,m=2655,a=1222,s=2876}
-        match = re.match(r"{x=(\d+),m=(\d+),a=(\d+),s=(\d+)}", s)
-        if not match:
-            raise ValueError(f"Failed to parse rating: {s}")
-        x, m, a, s = match.groups()
-        return cls(x=int(x), m=int(m), a=int(a), s=int(s))
 
 
 class RatingRange(pydantic.BaseModel):
@@ -115,6 +94,19 @@ class RatingRange(pydantic.BaseModel):
     def with_updated_key(self, key: str, value: tuple[int, int]) -> RatingRange:
         return RatingRange(**{**self.dict(), key: value})
 
+    @classmethod
+    def from_str(cls, s: str) -> RatingRange:
+        # {x=787,m=2655,a=1222,s=2876}
+        match = re.match(r"{x=(\d+),m=(\d+),a=(\d+),s=(\d+)}", s)
+        assert match is not None
+        x, m, a, s = match.groups()
+        return cls(
+            x=(int(x), int(x) + 1),
+            m=(int(m), int(m) + 1),
+            a=(int(a), int(a) + 1),
+            s=(int(s), int(s) + 1),
+        )
+
 
 class Solver(BaseSolver):
     def solve(self) -> Solution:
@@ -123,17 +115,11 @@ class Solver(BaseSolver):
         for w in workflow_str.split("\n"):
             w = Workflow.from_str(w)
             workflows[w.name] = w
-        ratings = [Rating.from_str(r) for r in rating_str.split("\n")]
+        ratings = [RatingRange.from_str(r) for r in rating_str.split("\n")]
 
         res1 = 0
         for rating in ratings:
-            start = RatingRange(
-                x=(rating.x, rating.x + 1),
-                m=(rating.m, rating.m + 1),
-                a=(rating.a, rating.a + 1),
-                s=(rating.s, rating.s + 1),
-            )
-            to_check = [("in", start)]
+            to_check = [("in", rating)]
             while len(to_check) > 0:
                 node, cur_range = to_check.pop()
                 next_states = workflows[node].evaluate(cur_range)
@@ -147,10 +133,9 @@ class Solver(BaseSolver):
         to_check = [("in", start)]
         res2 = 0
         while len(to_check) > 0:
-            node, cur_range = to_check.pop(0)
+            node, cur_range = to_check.pop()
             next_states = workflows[node].evaluate(cur_range)
             for (next_node, next_range) in next_states:
-                self.logger.info(f"{node} -> {next_node} ({next_range})")
                 if next_node == "A":
                     res2 += next_range.part2_score()
                 elif next_node != "R":
