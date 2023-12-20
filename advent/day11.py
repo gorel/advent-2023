@@ -52,9 +52,8 @@ class Solver(BaseSolver):
 
         g = GalaxyMap(galaxies=galaxies, empty_rows=empty_rows, empty_cols=empty_cols)
 
-        res1 = sum(g.pairwise_dists(factor=2).values())
-        res2 = sum(g.pairwise_dists(factor=1_000_000).values())
-        return Solution(res1, res2)
+        yield sum(g.pairwise_dists(factor=2).values())
+        yield sum(g.pairwise_dists(factor=1_000_000).values())
 
 
 Solver.run()

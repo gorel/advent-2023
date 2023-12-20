@@ -27,13 +27,12 @@ class Solver(BaseSolver):
             # Previous solution used brute force counting
             # res1 *= sum(1 for i in range(time - 1) if i * (time - i) > dist)
             res1 *= solve_algebraically(time, dist)
+        yield res1
 
         time = int(self.data.splitlines()[0].split(":")[1].replace(" ", ""))
         dist = int(self.data.splitlines()[1].split(":")[1].replace(" ", ""))
         # res2 = sum(1 for i in range(time - 1) if i * (time - i) > dist)
-        res2 = solve_algebraically(time, dist)
-
-        return Solution(res1, res2)
+        yield solve_algebraically(time, dist)
 
 
 Solver.run()

@@ -24,7 +24,8 @@ class Solver(BaseSolver):
                 cur = value - cur
             res2 += cur
 
-        return Solution(res1, res2)
+        yield res1
+        yield res2
 
 
 Solver.run()

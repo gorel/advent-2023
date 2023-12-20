@@ -22,7 +22,8 @@ class Solver(BaseSolver):
                         nums2.append(str(self.NUMS.index(n) + 1))
             res1 += int(nums1[0] + nums1[-1])
             res2 += int(nums2[0] + nums2[-1])
-        return Solution(res1, res2)
+        yield res1
+        yield res2
 
 
 Solver.run()

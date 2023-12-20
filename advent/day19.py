@@ -55,13 +55,13 @@ class Rule(pydantic.BaseModel):
         interval = (-float("inf"), float("inf"))
         if ":" not in s:
             return cls(next_state=s, cond_key=None, interval=interval)
-        condition, next_state = s.split(":")
-        if "<" in condition:
-            cond_key, interval = condition.split("<")
-            interval = (-float("inf"), int(interval))
+        condition_str, next_state = s.split(":")
+        if "<" in condition_str:
+            cond_key, interval_str = condition_str.split("<")
+            interval = (-float("inf"), int(interval_str))
         else:
-            cond_key, interval = condition.split(">")
-            interval = (int(interval) + 1, float("inf"))
+            cond_key, interval_str = condition_str.split(">")
+            interval = (int(interval_str) + 1, float("inf"))
         return cls(next_state=next_state, cond_key=cond_key, interval=interval)
 
 
@@ -112,8 +112,8 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         workflow_str, rating_str = self.data.strip().split("\n\n")
         workflows = {}
-        for w in workflow_str.split("\n"):
-            w = Workflow.from_str(w)
+        for w_str in workflow_str.split("\n"):
+            w = Workflow.from_str(w_str)
             workflows[w.name] = w
         ratings = [RatingRange.from_str(r) for r in rating_str.split("\n")]
 
@@ -128,6 +128,7 @@ class Solver(BaseSolver):
                         res1 += next_range.part1_score()
                     elif next_node != "R":
                         to_check.append((next_node, next_range))
+        yield res1
 
         start = RatingRange(x=(1, 4001), m=(1, 4001), a=(1, 4001), s=(1, 4001))
         to_check = [("in", start)]
@@ -140,8 +141,7 @@ class Solver(BaseSolver):
                     res2 += next_range.part2_score()
                 elif next_node != "R":
                     to_check.append((next_node, next_range))
-
-        return Solution(res1, res2)
+        yield res2
 
 
 Solver.run()

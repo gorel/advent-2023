@@ -74,21 +74,21 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         hands = []
         for line in self.data.splitlines():
-            hand, bid = line.split(" ")
-            hands.append(Hand(hand=list(hand), bid=int(bid)))
+            hand_str, bid = line.split(" ")
+            hands.append(Hand(hand=list(hand_str), bid=int(bid)))
 
         hands.sort(key=lambda hand: hand.score())
 
         res1 = 0
         for rank, hand in enumerate(hands, start=1):
             res1 += rank * hand.bid
+        yield res1
 
         res2 = 0
         hands.sort(key=lambda hand: hand.score(jokers_wild=True))
         for rank, hand in enumerate(hands, start=1):
             res2 += rank * hand.bid
-
-        return Solution(res1, res2)
+        yield res2
 
 
 Solver.run()

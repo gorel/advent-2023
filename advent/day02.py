@@ -31,7 +31,8 @@ class Solver(BaseSolver):
                 res1 += game_id
             res2 += minr * ming * minb
 
-        return Solution(res1, res2)
+        yield res1
+        yield res2
 
 
 Solver.run()

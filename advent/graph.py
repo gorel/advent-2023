@@ -4,7 +4,7 @@ import dataclasses
 import enum
 from typing import Generic, Iterator, Tuple, TypeVar
 
-T = TypeVar("T")
+Value = TypeVar("Value")
 
 
 class Direction(enum.Enum):
@@ -18,7 +18,6 @@ class Direction(enum.Enum):
     DOWNRIGHT = (1, 1)
 
     @classmethod
-    @property
     def cardinal(cls) -> list[Direction]:
         return [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN]
 
@@ -157,7 +156,7 @@ class Point:
             yield p
 
     def adjacent_with_dirs(self) -> Iterator[tuple[Point, Direction]]:
-        for d in Direction.cardinal:
+        for d in Direction.cardinal():
             yield (self + d, d)
 
     def adjacent8(self) -> Iterator[Point]:
@@ -208,8 +207,8 @@ class Line:
 
 
 @dataclasses.dataclass
-class Grid(Generic[T]):
-    g: list[list[T]]
+class Grid(Generic[Value]):
+    g: list[list[Value]]
 
     @property
     def rows(self) -> int:
@@ -220,16 +219,16 @@ class Grid(Generic[T]):
         return len(self.g[0])
 
     @property
-    def T(self) -> Grid[T]:
+    def T(self) -> Grid[Value]:
         return Grid([list(x) for x in zip(*self.g)])
 
     def inbounds(self, p: Point) -> bool:
         return 0 <= p.row < len(self.g) and 0 <= p.col < len(self.g[0])
 
-    def at(self, p: Point) -> T:
+    def at(self, p: Point) -> Value:
         return self.g[p.row][p.col]
 
-    def __iter__(self) -> Iterator[tuple[Point, T]]:
+    def __iter__(self) -> Iterator[tuple[Point, Value]]:
         for row in range(self.rows):
             for col in range(self.cols):
                 yield (Point(row, col), self.g[row][col])

@@ -42,7 +42,7 @@ class Graph(pydantic.BaseModel):
 
     def set_start(self) -> None:
         # First discover what kind of point S is
-        possible = set()
+        possible: set[str] = set()
         # Check up
         up = Point(self.start.row - 1, self.start.col)
         if self.start in self.neighbors(up):
@@ -182,7 +182,7 @@ class Graph(pydantic.BaseModel):
     def _bfs(self, p: Point, hull: set[Point]) -> tuple[set[Point], bool]:
         ok = True
         visited: set[Point] = set()
-        q = collections.deque()
+        q: collections.deque[Point] = collections.deque()
         q.append(p)
         while q:
             p = q.popleft()
@@ -231,10 +231,8 @@ class Solver(BaseSolver):
         g = Graph(nodes=nodes, rows=rows, cols=cols, start=start)
         g.set_start()
         g.display()
-        res1 = g.part1()
-        res2 = g.part2()
-
-        return Solution(res1, res2)
+        yield g.part1()
+        yield g.part2()
 
 
 Solver.run()

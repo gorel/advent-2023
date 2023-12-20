@@ -58,13 +58,12 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         actions = []
         for line in self.lines:
-            d, dist, code = line.split()
-            d = Direction.from_str(d)
+            d_str, dist, code = line.split()
+            d = Direction.from_str(d_str)
             actions.append(Action(direction=d, dist=int(dist), code=code[2:-1]))
 
-        res1 = Grid(actions).area()
-        res2 = Grid([a.fix_elf_reading_comprehension() for a in actions]).area()
-        return Solution(res1, res2)
+        yield Grid(actions).area()
+        yield Grid([a.fix_elf_reading_comprehension() for a in actions]).area()
 
 
 Solver.run()

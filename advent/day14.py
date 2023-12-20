@@ -25,7 +25,7 @@ class Grid(pydantic.BaseModel):
         out = []
         for row in g2.g:
             next_left_idx = 0
-            next_row = []
+            next_row: list[str] = []
             for j, char in enumerate(row):
                 if char == "#":
                     next_left_idx = j + 1
@@ -57,9 +57,9 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         grid = Grid(g=self.lines)
         grid = grid.tilt()
-        res1 = grid.load()
+        yield grid.load()
 
-        loads = []
+        loads: list[int] = []
         last_load = -1
         load = -1
         min_loads = 1_000
@@ -82,9 +82,7 @@ class Solver(BaseSolver):
 
         # Find the cycle index corresponding to the last load
         self.logger.info(f"Found cycle length of {len(loads)}")
-        res2 = loads[(TARGET - min_loads) % len(loads)]
-
-        return Solution(res1, res2)
+        yield loads[(TARGET - min_loads) % len(loads)]
 
 
 Solver.run()

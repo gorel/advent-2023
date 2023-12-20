@@ -5,7 +5,7 @@ from advent.base import BaseSolver, Solution
 
 class LensSet:
     def __init__(self) -> None:
-        self.boxes = [[] for _ in range(256)]
+        self.boxes: list[list[tuple[str, int]]] = [[] for _ in range(256)]
 
     def hash(self, s: str) -> int:
         res = 0
@@ -41,14 +41,13 @@ class Solver(BaseSolver):
         for code in self.data.strip().split(","):
             ls.apply(code)
             res1 += ls.hash(code)
+        yield res1
 
-        res2 = sum(
+        yield sum(
             i * j * focal_length
             for i, bucket in enumerate(ls.boxes, start=1)
             for j, (_, focal_length) in enumerate(bucket, start=1)
         )
-
-        return Solution(res1, res2)
 
 
 """

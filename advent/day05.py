@@ -99,8 +99,7 @@ class Solver(BaseSolver):
             next_result = transformation.transform_intervals(intervals)
             intervals = next_result.changed + next_result.carried
 
-        res1 = min(interval.lo for interval in intervals)
-        self.logger.info(f"Got {res1} for part 1")
+        yield min(interval.lo for interval in intervals)
 
         self.logger.info("Running part 2")
         intervals = almanac.part2_ranges()
@@ -109,10 +108,7 @@ class Solver(BaseSolver):
             next_result = transformation.transform_intervals(intervals)
             intervals = next_result.changed + next_result.carried
 
-        res2 = min(interval.lo for interval in intervals)
-        self.logger.info(f"Got {res2} for part 2")
-
-        return Solution(res1, res2)
+        yield min(interval.lo for interval in intervals)
 
 
 Solver.run()

@@ -134,13 +134,13 @@ class Solver(BaseSolver):
             g, nums = line.split(" ")
             problems.append(ProblemLine(s=g, nums=[int(x) for x in nums.split(",")]))
 
-        res1 = sum(
+        yield sum(
             joblib.Parallel(n_jobs=-1)(
                 joblib.delayed(problem.solutions)() for problem in tqdm.tqdm(problems)
             )  # type: ignore
         )
 
-        res2 = sum(
+        yield sum(
             joblib.Parallel(n_jobs=-1)(
                 joblib.delayed(
                     ProblemLine(
@@ -151,8 +151,6 @@ class Solver(BaseSolver):
                 for problem in tqdm.tqdm(problems)
             )  # type: ignore
         )
-
-        return Solution(res1, res2)
 
 
 Solver.run()

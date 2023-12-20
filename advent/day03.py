@@ -48,7 +48,7 @@ class Solver(BaseSolver):
         # This relies on each gear being adjacent to no more than two nodes.
         res1 = 0
         res2 = 0
-        gears = {}
+        gears: dict[Point, int] = {}
         for node in nodes:
             added = False
             for adj in node.adj:
@@ -61,7 +61,8 @@ class Solver(BaseSolver):
                             res2 += node.value * gears[adj]
                         gears[adj] = node.value
 
-        return Solution(res1, res2)
+        yield res1
+        yield res2
 
 
 Solver.run()

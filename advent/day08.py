@@ -51,9 +51,8 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         tbl = TransitionTable.from_lines(self.data.splitlines())
 
-        res1 = tbl.zdist("AAA")
-        res2 = math.lcm(*[tbl.zdist(node, last_only=True) for node in tbl.a_starts])
-        return Solution(res1, res2)
+        yield tbl.zdist("AAA")
+        yield math.lcm(*[tbl.zdist(node, last_only=True) for node in tbl.a_starts])
 
 
 Solver.run()

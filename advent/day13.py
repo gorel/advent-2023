@@ -34,11 +34,8 @@ class Grid(pydantic.BaseModel):
 class Solver(BaseSolver):
     def solve(self) -> Solution:
         grids = [Grid(data=group.split("\n")) for group in self.data.split("\n\n")]
-
-        res1 = sum(grid.reflection_value() for grid in grids)
-        res2 = sum(grid.reflection_value(expected_diffs=1) for grid in grids)
-
-        return Solution(res1, res2)
+        yield sum(grid.reflection_value() for grid in grids)
+        yield sum(grid.reflection_value(expected_diffs=1) for grid in grids)
 
 
 Solver.run()

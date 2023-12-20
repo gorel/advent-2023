@@ -7,7 +7,7 @@ from advent.base import BaseSolver, Solution
 class Solver(BaseSolver):
     def solve(self) -> Solution:
         res1 = 0
-        res2_d = collections.defaultdict(int)
+        res2_d: dict[int, int] = collections.defaultdict(int)
         for card_id, line in enumerate(self.data.splitlines(), start=1):
             res2_d[card_id] += 1
             winners, mine = line.split(":")[1].split("|")
@@ -21,7 +21,8 @@ class Solver(BaseSolver):
                     res2_d[card_id + i] += res2_d[card_id]
 
         # Part2 solution is sum of scorecard counts
-        return Solution(res1, sum(res2_d.values()))
+        yield res1
+        yield sum(res2_d.values())
 
 
 Solver.run()

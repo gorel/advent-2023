@@ -6,8 +6,8 @@ import heapq
 import pydantic
 
 from advent.base import BaseSolver, Solution
+from advent.colors import gray, green, yellow
 from advent.graph import Direction, Point
-from advent.log import gray, green, yellow
 
 
 class State(pydantic.BaseModel):
@@ -61,7 +61,7 @@ class Grid(pydantic.BaseModel):
     def print_path(self, prev: dict[State, State | None], final_state: State) -> None:
         res = []
         res_points = {}
-        cur = final_state
+        cur: State | None = final_state
         while cur is not None:
             res.append(cur)
             res_points[cur.p] = cur
@@ -200,9 +200,8 @@ class Grid(pydantic.BaseModel):
 class Solver(BaseSolver):
     def solve(self) -> Solution:
         g = Grid(g=[[int(x) for x in line] for line in self.lines])
-        res1 = g.search_3()
-        res2 = g.search_3(ultra=True)
-        return Solution(res1, res2)
+        yield g.search_3()
+        yield g.search_3(ultra=True)
 
 
 Solver.run()
