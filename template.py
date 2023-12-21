@@ -7,11 +7,9 @@ class Solver(BaseSolver):
     def solve(self) -> Solution:
         for line in self.lines:
             print(line)
-        res1 = 0
-        yield res1
 
-        res2 = 0
-        yield res2
+        yield None
+        yield None
 
 
 Solver.run()
