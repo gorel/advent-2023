@@ -95,13 +95,13 @@ class BaseSolver(abc.ABC):
         s = green(f"Solution 1: {part1}") + blue(f" (took {elapsed:.2f}s)")
         logger.info(s)
 
+        start = time.time()
         part2 = next(solution)
         if part2 is not None:
             elapsed = time.time() - start
             s = green(f"Solution 2: {part2}") + blue(f" (took {elapsed:.2f}s)")
             logger.info(s)
-        logger.info(blue(f"Took {elapsed:.2f}s"))
-        print(green("-------------------------"))
+        print("-------------------------")
 
         if not args.no_submit:
             solver.submit(part1, part2)
