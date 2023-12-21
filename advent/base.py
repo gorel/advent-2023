@@ -12,7 +12,7 @@ import aocd
 from rich.console import RenderableType
 from rich.live import Live
 
-from advent.colors import green
+from advent.colors import blue, green
 from advent.log import ColoredLogFormatter
 
 Result = str | int
@@ -92,12 +92,15 @@ class BaseSolver(abc.ABC):
         solution = solver.solve()
         part1 = next(solution)
         elapsed = time.time() - start
-        logger.info(green(f"Solution 1: {part1}"))
+        s = green(f"Solution 1: {part1}") + blue(f" (took {elapsed:.2f}s)")
+        logger.info(s)
 
         part2 = next(solution)
         if part2 is not None:
-            logger.info(green(f"Solution 2: {part2}"))
-        logger.info(green(f"Took {elapsed:.2f}s"))
+            elapsed = time.time() - start
+            s = green(f"Solution 2: {part2}") + blue(f" (took {elapsed:.2f}s)")
+            logger.info(s)
+        logger.info(blue(f"Took {elapsed:.2f}s"))
         print(green("-------------------------"))
 
         if not args.no_submit:

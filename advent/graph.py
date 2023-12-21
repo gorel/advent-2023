@@ -148,6 +148,14 @@ class Point:
     row: int
     col: int
 
+    @property
+    def x(self) -> int:
+        return self.row
+
+    @property
+    def y(self) -> int:
+        return self.col
+
     def move(self, direction: Direction) -> Point:
         return self + direction
 
