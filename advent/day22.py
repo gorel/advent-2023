@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import dataclasses
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from advent.base import BaseSolver, Solution
 
 
@@ -20,16 +23,25 @@ class Brick:
     point2: Point3D
     bricks_below: set[Brick] = dataclasses.field(default_factory=set)
     bricks_above: set[Brick] = dataclasses.field(default_factory=set)
+    below_ids: set[str] = dataclasses.field(default_factory=set)
 
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def zpos(self) -> int:
+    def minz(self) -> int:
         return min(self.point1.z, self.point2.z)
 
+    def maxz(self) -> int:
+        return max(self.point1.z, self.point2.z)
+
     def fall(self, new_z: int) -> None:
-        self.point1 = Point3D(self.point1.x, self.point1.y, new_z)
-        self.point2 = Point3D(self.point2.x, self.point2.y, new_z)
+        fall_distance = self.minz() - new_z
+        self.point1 = Point3D(
+            self.point1.x, self.point1.y, self.point1.z - fall_distance
+        )
+        self.point2 = Point3D(
+            self.point2.x, self.point2.y, self.point2.z - fall_distance
+        )
 
     def all_points(self) -> list[Point3D]:
         points = []
@@ -38,6 +50,32 @@ class Brick:
                 for z in range(self.point1.z, self.point2.z + 1):
                     points.append(Point3D(x, y, z))
         return points
+
+    def bottom_surface(self) -> list[Point3D]:
+        points = []
+        for x in range(self.point1.x, self.point2.x + 1):
+            for y in range(self.point1.y, self.point2.y + 1):
+                points.append(Point3D(x, y, self.minz()))
+        return points
+
+    def top_surface(self) -> list[Point3D]:
+        points = []
+        for x in range(self.point1.x, self.point2.x + 1):
+            for y in range(self.point1.y, self.point2.y + 1):
+                points.append(Point3D(x, y, self.maxz()))
+        return points
+
+    def vertices(self) -> list[Point3D]:
+        return [
+            Point3D(self.point1.x, self.point1.y, self.point1.z),
+            Point3D(self.point2.x, self.point1.y, self.point1.z),
+            Point3D(self.point1.x, self.point2.y, self.point1.z),
+            Point3D(self.point2.x, self.point2.y, self.point1.z),
+            Point3D(self.point1.x, self.point1.y, self.point2.z),
+            Point3D(self.point2.x, self.point1.y, self.point2.z),
+            Point3D(self.point1.x, self.point2.y, self.point2.z),
+            Point3D(self.point2.x, self.point2.y, self.point2.z),
+        ]
 
     @classmethod
     def from_str(cls, id: str, s: str) -> Brick:
@@ -50,12 +88,9 @@ class Brick:
 
 
 class Solver(BaseSolver):
-    def idx(self, x: int, y: int, z: int) -> int:
-        return x + y * 9 + z * 9 * 9
-
     def solve(self) -> Solution:
-        # Create a 9x9x260 grid filled with None
-        grid: list[Brick | None] = [None] * 9 * 9 * 260
+        # grid stores at [x][y], (zpos, brick_id)
+        grid = [[(0, "")] * 9 for _ in range(9)]
         bricks = []
         for i, line in enumerate(self.lines):
             letter = chr(ord("A") + i % 26)
@@ -63,44 +98,30 @@ class Solver(BaseSolver):
             identifier = f"{letter}{number}"
             bricks.append(Brick.from_str(identifier, line))
 
-        # First make them fall
-        for brick in sorted(bricks, key=lambda b: b.zpos()):
-            bottom = None
-            for x in range(brick.point1.x, brick.point2.x + 1):
-                if bottom is not None:
-                    break
-                for y in range(brick.point1.y, brick.point2.y + 1):
-                    if bottom is not None:
-                        break
-                    for new_z in range(brick.zpos(), 0, -1):
-                        if grid[self.idx(x, y, new_z)] is not None:
-                            bottom = new_z + 1
-                            break
+        for brick in sorted(bricks, key=lambda b: b.minz()):
+            # Make them fall
+            fall_to_zidx = 1
+            for point in brick.bottom_surface():
+                fall_to_zidx = min(fall_to_zidx, grid[point.x][point.y][0] + 1)
+            brick.fall(fall_to_zidx)
 
-            if bottom is None:
-                bottom = 1
-            brick.fall(bottom)
-            for point in brick.all_points():
-                grid[self.idx(point.x, point.y, point.z)] = brick
+            # Then see what's below
+            for point in brick.bottom_surface():
+                below_zidx, below_id = grid[point.x][point.y]
+                if below_zidx == point.z - 1 and below_id != "":
+                    brick.below_ids.add(below_id)
 
-        # Then see who they're under
-        for x in range(9):
-            for y in range(9):
-                for z in range(2, 256):
-                    brick1 = grid[self.idx(x, y, z)]
-                    brick2 = grid[self.idx(x, y, z - 1)]
-                    if brick1 is not None and brick2 is not None and brick1 != brick2:
-                        self.logger.debug(f"{brick1.id} is under {brick2.id}")
-                        brick1.bricks_above.add(brick2)
-                        brick2.bricks_below.add(brick1)
+            # Then update grid2
+            for point in brick.top_surface():
+                grid[point.x][point.y] = (point.z, brick.id)
 
-        # And lastly, see if removing each brick leaves a brick with nothing under it
-        non_load_bearing_bricks = {brick.id for brick in bricks}
+        # And now find the dependent bricks
+        load_bearing_bricks = set()
         for brick in bricks:
-            if len(brick.bricks_below) == 1:
-                non_load_bearing_bricks.discard(list(brick.bricks_below)[0].id)
-
-        yield len(non_load_bearing_bricks)
+            if len(brick.below_ids) == 1:
+                # That's a load bearing brick
+                load_bearing_bricks.add(list(brick.below_ids)[0])
+        yield len(bricks) - len(load_bearing_bricks)
 
         yield None
 
