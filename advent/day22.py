@@ -97,23 +97,19 @@ class Solver(BaseSolver):
         load_bearing_bricks = set()
         for brick in bricks:
             if len(brick.below_me) == 1:
-                # That's a load bearing brick
                 load_bearing_bricks.add(list(brick.below_me)[0])
         yield len(bricks) - len(load_bearing_bricks)
 
-        # Start from the top and go down
+        # Part 2
         total = 0
         for brick in sorted(bricks, key=lambda b: b.minz()):
-            res = 0
             to_remove = {brick}
-            # Try removing this brick
             for brick2 in sorted(bricks, key=lambda b: b.minz()):
                 if brick == brick2:
                     continue
                 if len(brick2.below_me - to_remove) == 0 and len(brick2.below_me) > 0:
                     to_remove.add(brick2)
-                    res += 1
-            total += res
+                    total += 1
 
         yield total
 
