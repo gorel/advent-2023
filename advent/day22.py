@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import dataclasses
 
-import matplotlib.pyplot as plt
-import numpy as np
-
 from advent.base import BaseSolver, Solution
 
 
@@ -21,9 +18,8 @@ class Brick:
     id: str
     point1: Point3D
     point2: Point3D
-    bricks_below: set[Brick] = dataclasses.field(default_factory=set)
-    bricks_above: set[Brick] = dataclasses.field(default_factory=set)
-    below_ids: set[str] = dataclasses.field(default_factory=set)
+    below_me: set[Brick] = dataclasses.field(default_factory=set)
+    above_me: set[Brick] = dataclasses.field(default_factory=set)
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -43,14 +39,6 @@ class Brick:
             self.point2.x, self.point2.y, self.point2.z - fall_distance
         )
 
-    def all_points(self) -> list[Point3D]:
-        points = []
-        for x in range(self.point1.x, self.point2.x + 1):
-            for y in range(self.point1.y, self.point2.y + 1):
-                for z in range(self.point1.z, self.point2.z + 1):
-                    points.append(Point3D(x, y, z))
-        return points
-
     def bottom_surface(self) -> list[Point3D]:
         points = []
         for x in range(self.point1.x, self.point2.x + 1):
@@ -65,18 +53,6 @@ class Brick:
                 points.append(Point3D(x, y, self.maxz()))
         return points
 
-    def vertices(self) -> list[Point3D]:
-        return [
-            Point3D(self.point1.x, self.point1.y, self.point1.z),
-            Point3D(self.point2.x, self.point1.y, self.point1.z),
-            Point3D(self.point1.x, self.point2.y, self.point1.z),
-            Point3D(self.point2.x, self.point2.y, self.point1.z),
-            Point3D(self.point1.x, self.point1.y, self.point2.z),
-            Point3D(self.point2.x, self.point1.y, self.point2.z),
-            Point3D(self.point1.x, self.point2.y, self.point2.z),
-            Point3D(self.point2.x, self.point2.y, self.point2.z),
-        ]
-
     @classmethod
     def from_str(cls, id: str, s: str) -> Brick:
         point1, point2 = s.split("~")
@@ -90,7 +66,8 @@ class Brick:
 class Solver(BaseSolver):
     def solve(self) -> Solution:
         # grid stores at [x][y], (zpos, brick_id)
-        grid = [[(0, "")] * 9 for _ in range(9)]
+        dummy = Brick.from_str("dummy", "0,0,0~0,0,0")
+        grid = [[(0, dummy)] * 10 for _ in range(10)]
         bricks = []
         for i, line in enumerate(self.lines):
             letter = chr(ord("A") + i % 26)
@@ -102,28 +79,43 @@ class Solver(BaseSolver):
             # Make them fall
             fall_to_zidx = 1
             for point in brick.bottom_surface():
-                fall_to_zidx = min(fall_to_zidx, grid[point.x][point.y][0] + 1)
+                fall_to_zidx = max(fall_to_zidx, grid[point.x][point.y][0] + 1)
             brick.fall(fall_to_zidx)
 
             # Then see what's below
             for point in brick.bottom_surface():
-                below_zidx, below_id = grid[point.x][point.y]
-                if below_zidx == point.z - 1 and below_id != "":
-                    brick.below_ids.add(below_id)
+                below_zidx, below = grid[point.x][point.y]
+                if below_zidx == point.z - 1 and below != dummy:
+                    brick.below_me.add(below)
+                    below.above_me.add(brick)
 
             # Then update grid2
             for point in brick.top_surface():
-                grid[point.x][point.y] = (point.z, brick.id)
+                grid[point.x][point.y] = (point.z, brick)
 
         # And now find the dependent bricks
         load_bearing_bricks = set()
         for brick in bricks:
-            if len(brick.below_ids) == 1:
+            if len(brick.below_me) == 1:
                 # That's a load bearing brick
-                load_bearing_bricks.add(list(brick.below_ids)[0])
+                load_bearing_bricks.add(list(brick.below_me)[0])
         yield len(bricks) - len(load_bearing_bricks)
 
-        yield None
+        # Start from the top and go down
+        total = 0
+        for brick in sorted(bricks, key=lambda b: b.minz()):
+            res = 0
+            to_remove = {brick}
+            # Try removing this brick
+            for brick2 in sorted(bricks, key=lambda b: b.minz()):
+                if brick == brick2:
+                    continue
+                if len(brick2.below_me - to_remove) == 0 and len(brick2.below_me) > 0:
+                    to_remove.add(brick2)
+                    res += 1
+            total += res
+
+        yield total
 
 
 Solver.run()
