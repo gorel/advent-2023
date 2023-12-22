@@ -89,7 +89,7 @@ class Solver(BaseSolver):
                     brick.below_me.add(below)
                     below.above_me.add(brick)
 
-            # Then update grid2
+            # Then update the grid
             for point in brick.top_surface():
                 grid[point.x][point.y] = (point.z, brick)
 
