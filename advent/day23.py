@@ -7,7 +7,11 @@ from advent.graph import Point
 class Solver(BaseSolver):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.logger.info("Precomputing graph edges")
         self.g = [[c for c in line] for line in self.lines]
+        self.g_short_part1 = self.simplify_graph(part2=False)
+        self.g_short_part2 = self.simplify_graph(part2=True)
+        self.logger.info("Done precomputing graph edges")
 
     @property
     def rows(self) -> int:
@@ -52,6 +56,11 @@ class Solver(BaseSolver):
         for junction in junctions:
             adj = self.get_adjacent_junctions(junctions, junction, part2)
             g2[junction] = adj
+            # Optimization: if the junction has the destination in its adjacencies,
+            # then it's *only* valid to travel to the destination from this junction.
+            # Otherwise, traveling elsewhere will block our only path to the exit.
+            if dst in adj:
+                g2[junction] = {dst: adj[dst]}
         return g2
 
     def get_adjacent_junctions(
@@ -102,7 +111,7 @@ class Solver(BaseSolver):
                 return True
 
     def dfs(self, part2: bool = False) -> int:
-        g = self.simplify_graph(part2=part2)
+        g = self.g_short_part2 if part2 else self.g_short_part1
         src = Point(0, 1)
         dst = Point(self.rows - 1, self.cols - 2)
         visited = set()
