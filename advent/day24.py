@@ -94,10 +94,10 @@ class Solver(BaseSolver):
         # This is really hard to solve programatically, so let's just use Z3
         # I never would've figured this out without the help from the reddit post.
         s = z3.Solver()
-        sx, sy, sz = z3.BitVec("sx", 64), z3.BitVec("sy", 64), z3.BitVec("sz", 64)
-        dx, dy, dz = z3.BitVec("dx", 64), z3.BitVec("dy", 64), z3.BitVec("dz", 64)
+        sx, sy, sz = z3.Real("sx"), z3.Real("sy"), z3.Real("sz")
+        dx, dy, dz = z3.Real("dx"), z3.Real("dy"), z3.Real("dz")
         for i, line in enumerate(lines):
-            t = z3.BitVec(f"t{i}", 64)
+            t = z3.Real(f"t{i}")
             s.add(
                 t >= 0,
                 sx + dx * t == line.start.x + line.start.vx * t,
