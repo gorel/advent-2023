@@ -74,16 +74,14 @@ class Line2D:
 class Solver(BaseSolver):
     def solve(self) -> Solution:
         lines = [Line2D.from_str(line) for line in self.lines]
-        minx = 7 if self.is_example else 200_000_000_000_000
-        maxx = 27 if self.is_example else 400_000_000_000_000
-        miny = float("-inf") if self.is_example else minx
-        maxy = float("inf") if self.is_example else maxx
+        loxy = 7 if self.is_example else 200_000_000_000_000
+        hixy = 27 if self.is_example else 400_000_000_000_000
 
         res = 0
         for i in range(len(lines)):
             for j in range(i + 1, len(lines)):
                 intersection = lines[i].intersection(lines[j])
-                if minx <= intersection.x <= maxx and miny <= intersection.y <= maxy:
+                if loxy <= intersection.x <= hixy and loxy <= intersection.y <= hixy:
                     res += 1
         yield res
 
