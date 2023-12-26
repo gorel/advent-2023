@@ -6,7 +6,6 @@ import collections
 from dataclasses import dataclass
 
 import tqdm
-from z3 import copy
 
 from advent.base import BaseSolver, Solution
 
